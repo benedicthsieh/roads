@@ -3,9 +3,56 @@ var WIDTH = 100;
 var HEIGHT = 100;
 var SPACING = 5;
 
-var roads = [
-  {x1: 10, y1: 20, x2:20, y2:30, level: 2.5, recentTravelers: 0 },
-];
+// var roads = [
+//   {x1: 10, y1: 20, x2:20, y2:30, level: 2.5, recentTravelers: 0 },
+// ];
+
+// Road indexing: always look up a road based on its top-left-most point
+// (top first, then left).
+var directions = [
+  "N", "NE", "E", "SE", "S", "SW", "W", "NW"
+]
+
+function roadKey(x, y, dx, dy) {
+  return `${x},${y},${dx},${dy}`
+}
+
+function Road(x1, y1, x2, y2) {
+  this.x1 = x1;
+  this.y1 = y1;
+  this.x2 = x2;
+  this.y2 = y2;
+  this.level = 1;
+  this.recentTravelers = 0;
+}
+
+// Populate a map of roads.
+// Roads are the same going both ways, so there will be multiple references
+// to the same object in this map.
+var roads = {};
+for (var x = 0; x < WIDTH; x += 10) {
+  for (var y = 0; y < HEIGHT; y += 10) {
+    for (var dx = -10; dx <= 10; dx += 10) {
+      for (var dy = -10; dy <=10; dy += 10) {
+        if (dx == 0 && dy == 0) {
+          continue;
+        }
+        otherX = x + dx;
+        otherY = y + dy;
+        if (otherX < 0 || otherY < 0 || otherX >= WIDTH || otherY >= HEIGHT) {
+          continue;
+        }
+        var road = roads[roadKey(otherX, otherY, dx * -1, dy * -1)];
+        if (!road) {
+          road = new Road(x, y, otherX, otherY);
+        }
+        roads[roadKey(x, y, dx, dy)] = road;
+      }
+    }
+  }
+}
+
+
 
 var travelers = [
   {
@@ -85,17 +132,24 @@ function setup() {
 function draw() {
   background(50);
 
+  stroke(100);
+  for (const [key, road] of Object.entries(roads)) {
+    strokeWeight(1 * road.level);
+    line(t(road.x1), t(road.y1), t(road.x2), t(road.y2));
+  }
+
   stroke(255);
   strokeWeight(10);
-
   for (var i = 0; i < WIDTH; i+= 10) {
     for (var j = 0; j < HEIGHT; j+= 10) {
       point(t(i), t(j));
     }
   }
-  updateTravelersAndRoads();
 
+  updateTravelersAndRoads();
+  stroke(255);
   stroke("green");
+  strokeWeight(10);
   for (var i = 0; i < travelers.length; i++) {
     var location = travelers[i].location;
     point(t(location.x), t(location.y));
