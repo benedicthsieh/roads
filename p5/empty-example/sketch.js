@@ -3,16 +3,6 @@ var WIDTH = 100;
 var HEIGHT = 100;
 var SPACING = 5;
 
-// var roads = [
-//   {x1: 10, y1: 20, x2:20, y2:30, level: 2.5, recentTravelers: 0 },
-// ];
-
-// Road indexing: always look up a road based on its top-left-most point
-// (top first, then left).
-var directions = [
-  "N", "NE", "E", "SE", "S", "SW", "W", "NW"
-]
-
 function roadKey(x, y, dx, dy) {
   return `${x},${y},${dx},${dy}`
 }
@@ -22,7 +12,7 @@ function Road(x1, y1, x2, y2) {
   this.y1 = y1;
   this.x2 = x2;
   this.y2 = y2;
-  this.level = 1;
+  this.level = 0;
   this.recentTravelers = 0;
 }
 
@@ -52,19 +42,42 @@ for (var x = 0; x < WIDTH; x += 10) {
   }
 }
 
-
+function Traveler(startX, startY, goalX, goalY) {
+  this.location = {x: startX, y: startY};
+  this.goal = {x: goalX, y: goalY};
+  this.lastPoint = null;
+  this.nextPoint = findNextPoint(this.location, this.goal);
+}
 
 var travelers = [
-  {
-    location: {x: 10, y:10},
-    goal: {x: 50, y: 0},
-    lastPoint: {x: 10, y: 10},
-    nextPoint: {x: 20, y: 0}
-  },
+  // {
+  //   location: {x: 0, y:10},
+  //   goal: {x: 50, y: 0},
+  //   lastPoint: {x: 0, y: 10},
+  //   nextPoint: {x: 20, y: 0}
+  // },
+  new Traveler(0, 10, 50, 0),
+  new Traveler(20, 0, 30, HEIGHT - 10),
 ];
 
 function t(coordinate) {
   return OFFSET + coordinate * SPACING;
+}
+
+function findNextPointDijkstra(location, goal) {
+  function DiPoint(x, y, cost) {
+    this.x = x;
+    this.y = y;
+    this.cost = cost;  // 0 if location == this, otherwise Number.MAX_SAFE_INTEGER
+    this.prev = null;
+  }
+
+  var allPoints = {};
+  for (var i = 0; i < WIDTH; i+= 10) {
+    for (var j = 0; j < HEIGHT; j+= 10) {
+      point(t(i), t(j));
+    }
+  }
 }
 
 function findNextPoint(location, goal) {
@@ -113,9 +126,20 @@ function updateTravelersAndRoads() {
     var traveler = travelers[i];
     var location = traveler.location;
     // Traveler at point
-    if (Number.isInteger(location.x) && Number.isInteger(location.y)) {
+    if (location.x % 10 == 0 && location.y % 10 == 0) {
       // TODO: improve last road
       // TODO: do some real pathfinding.
+      lp = traveler.lastPoint;
+      np = traveler.nextPoint;
+      if (lp) {
+        if (lp.x == np.x && lp.y == np.y) {
+          // This traveler has arrived.
+          continue;
+        }
+
+        var traveledRoad = roads[roadKey(lp.x, lp.y, np.x - lp.x, np.y - lp.y)];
+        traveledRoad.level += 1;
+      }
       traveler.lastPoint = location;
       traveler.nextPoint = findNextPoint(location, traveler.goal);
     }
@@ -134,7 +158,7 @@ function draw() {
 
   stroke(100);
   for (const [key, road] of Object.entries(roads)) {
-    strokeWeight(1 * road.level);
+    strokeWeight(2 * road.level);
     line(t(road.x1), t(road.y1), t(road.x2), t(road.y2));
   }
 
