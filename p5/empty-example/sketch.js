@@ -134,7 +134,7 @@ function findNextPointDijkstra(location, goal) {
     lastStep = backtrace[lastStep];
   }
   nextStep = path[1];
-  console.log(`Path is ${path}, Next step is ${nextStep}`);
+  // console.log(`Path is ${path}, Next step is ${nextStep}`);
   return {x: nextStep[0], y: nextStep[1]};
 }
 
@@ -258,11 +258,22 @@ function randomEdgeTraveler() {
   return new Traveler(startX, startY, endX, endY);
 }
 
+function degradeRoads(){
+  for (const [key, road] of Object.entries(roads)) {
+    if (Math.random() > 0.8) {
+      road.level = Math.floor(road.level * 0.5);
+    }
+  }
+}
+
 var tick = 0;
 function draw() {
   background(50);
 
   stroke(100);
+  if (tick % 300 == 0) {
+    degradeRoads();
+  }
   for (const [key, road] of Object.entries(roads)) {
     strokeWeight(2 * road.level);
     line(t(road.x1), t(road.y1), t(road.x2), t(road.y2));
