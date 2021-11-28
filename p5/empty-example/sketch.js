@@ -200,12 +200,11 @@ function updateTravelersAndRoads() {
       if (lp) {
         var traveledRoad = roads[roadKey(lp.x, lp.y, np.x - lp.x, np.y - lp.y)];
         traveledRoad.level += 1;
-
-        if (location.x == traveler.goal.x && location.y == traveler.goal.y) {
-          // Traveler has arrived.
-          traveler.active = false;
-          continue;
-        }
+      }
+      if (location.x == traveler.goal.x && location.y == traveler.goal.y) {
+        // Traveler has arrived.
+        traveler.active = false;
+        continue;
       }
       traveler.lastPoint = location;
       // traveler.nextPoint = findNextPoint(location, traveler.goal);
